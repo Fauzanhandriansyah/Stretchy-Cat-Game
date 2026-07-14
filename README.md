@@ -3,8 +3,6 @@
 # 🐾 Stretchy Cat 🐾
 **Puzzle Meong Penuh Warna**
 
-![Stretchy Cat Overview]
-
 <img width="704" height="1500" alt="image" src="https://github.com/user-attachments/assets/ca03e509-e3ec-45f3-9d8e-41fc51573525" />
 
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
