@@ -1,0 +1,6 @@
+{
+  "name": "Stretchy Cat",
+  "description": "Game puzzle seru dan lucu dengan 1000 tingkatan. Regangkan tubuh kucing meong imut untuk mengisi seluruh ruangan!",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
