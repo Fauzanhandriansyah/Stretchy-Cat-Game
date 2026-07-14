@@ -70,14 +70,12 @@ Bosan dengan suasana yang itu-itu saja? Buka dan ganti tampilan kucing atau ubah
 
 ```bash
 # Contoh Clone Repositori
-git clone [https://github.com/username/stretchy-cat.git](https://github.com/username/stretchy-cat.git)
+git clone [https://github.com/Fauzanhandriansyah/stretchy-cat.git](https://github.com/Fauzanhandriansyah/stretchy-cat.git)
 
 # Masuk ke direktori
 cd stretchy-cat
+
 ## Run Locally
-
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
-
 
 1. Open Android Studio
 2. Select **Open** and choose the directory containing this project
