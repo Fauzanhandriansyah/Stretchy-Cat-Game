@@ -14,13 +14,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
@@ -37,10 +41,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.example.game.GameScreen
 import com.example.game.GameViewModel
 import com.example.game.LevelGenerator
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +70,6 @@ fun LevelSelectScreen(
     modifier: Modifier = Modifier
 ) {
     val progressList by viewModel.allProgress.collectAsState()
-    var showResetDialog by remember { mutableStateOf(false) }
 
     // Map levelId to progress for easy lookup
     val progressMap = remember(progressList) {
@@ -77,6 +83,19 @@ fun LevelSelectScreen(
             Color(0xFFFFFAF0)  // Floral Cream
         )
     )
+
+    val coroutineScope = rememberCoroutineScope()
+    val nextLevelToPlay by viewModel.nextLevelToPlay.collectAsState()
+    
+    // Auto-select page based on the next playable level
+    val initialPage = remember { ((nextLevelToPlay - 1) / 50).coerceIn(0, 19) }
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 20 })
+    val lazyListState = rememberLazyListState()
+
+    // Whenever current page changes, automatically scroll the LazyRow tab-pill selection to that item
+    LaunchedEffect(pagerState.currentPage) {
+        lazyListState.animateScrollToItem(pagerState.currentPage)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -102,86 +121,158 @@ fun LevelSelectScreen(
                         )
                     }
                 },
-                actions = {
-                    // Reset Progress Button (Trash icon)
-                    IconButton(
-                        onClick = { showResetDialog = true },
-                        modifier = Modifier.testTag("reset_progress_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteForever,
-                            contentDescription = "Hapus Semua Kemajuan",
-                            tint = Color(0xFFE74C3C)
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFFFF6ED)
                 )
             )
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgGradient)
                 .padding(innerPadding)
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 85.dp),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+            // 1. Scrollable Page Selector Pills (Tabs)
+            LazyRow(
+                state = lazyListState,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFFF6ED))
             ) {
-                items(1000) { index ->
-                    val levelId = index + 1
-                    val progress = progressMap[levelId]
+                items(20) { page ->
+                    val startLevel = page * 50 + 1
+                    val endLevel = (page + 1) * 50
+                    val isSelected = pagerState.currentPage == page
 
-                    // A level is unlocked if it is level 1, OR if the previous level is completed
-                    val isUnlocked = levelId == 1 || progressMap[levelId - 1]?.isCompleted == true
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isSelected) Color(0xFFE67E22) else Color.White)
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(page)
+                                }
+                            }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("page_tab_$page")
+                    ) {
+                        Text(
+                            text = "$startLevel - $endLevel",
+                            color = if (isSelected) Color.White else Color(0xFF5D6D7E),
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
 
-                    LevelGridItem(
-                        levelId = levelId,
-                        isUnlocked = isUnlocked,
-                        stars = progress?.stars ?: 0,
-                        bestTime = progress?.bestTimeSeconds,
-                        onClick = {
-                            if (isUnlocked) {
-                                viewModel.startLevel(levelId)
+            // 2. Navigation controls with Arrow Buttons and Page Info Indicator
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val hasPrev = pagerState.currentPage > 0
+                val hasNext = pagerState.currentPage < 19
+
+                IconButton(
+                    onClick = {
+                        if (hasPrev) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
                             }
                         }
+                    },
+                    enabled = hasPrev,
+                    modifier = Modifier.testTag("prev_page_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Halaman Sebelumnya",
+                        tint = if (hasPrev) Color(0xFFE67E22) else Color(0xFFBDC3C7)
+                    )
+                }
+
+                val currentStart = pagerState.currentPage * 50 + 1
+                val currentEnd = (pagerState.currentPage + 1) * 50
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Tingkat $currentStart - $currentEnd",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp,
+                        color = Color(0xFF2C3E50)
+                    )
+                    Text(
+                        text = "Halaman ${pagerState.currentPage + 1} dari 20",
+                        fontSize = 11.sp,
+                        color = Color(0xFF95A5A6),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        if (hasNext) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        }
+                    },
+                    enabled = hasNext,
+                    modifier = Modifier.testTag("next_page_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Halaman Selanjutnya",
+                        tint = if (hasNext) Color(0xFFE67E22) else Color(0xFFBDC3C7)
                     )
                 }
             }
-        }
-    }
 
-    // Reset Progress Confirmation Dialog
-    if (showResetDialog) {
-        AlertDialog(
-            onDismissRequest = { showResetDialog = false },
-            title = { Text("Reset Kemajuan Game?") },
-            text = { Text("Langkah ini akan menghapus semua level yang telah Anda selesaikan dan mengunci kembali level 2 hingga 1000. Apakah Anda yakin?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.resetAllGameProgress()
-                        showResetDialog = false
-                    },
-                    modifier = Modifier.testTag("confirm_reset_btn")
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 3. Horizontal Pager holding the grid of 50 levels for each page
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) { page ->
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 85.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Text("Ya, Reset", color = Color(0xFFE74C3C), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showResetDialog = false }
-                ) {
-                    Text("Batal", color = Color(0xFF7F8C8D))
+                    items(50) { index ->
+                        val levelId = page * 50 + index + 1
+                        val progress = progressMap[levelId]
+
+                        // A level is unlocked if it is level 1, OR if the previous level is completed
+                        val isUnlocked = levelId == 1 || progressMap[levelId - 1]?.isCompleted == true
+
+                        LevelGridItem(
+                            levelId = levelId,
+                            isUnlocked = isUnlocked,
+                            stars = progress?.stars ?: 0,
+                            bestTime = progress?.bestTimeSeconds,
+                            onClick = {
+                                if (isUnlocked) {
+                                    viewModel.startLevel(levelId)
+                                }
+                            }
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 }
 
