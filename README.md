@@ -29,7 +29,7 @@
     *   🐁 Tikus
     *   🧶 Gulungan Benang
 *   🏆 **Kemajuan & Prestasi:** 
-    *   Ratusan level yang menantang (Level 259, 260, dan seterusnya!).
+    *   1000 level yang menantang.
     *   Selesaikan puzzle secepat mungkin (misal: dalam 20 detik) untuk mengumpulkan **3 Bintang** penuh!
     *   Lacak kemajuanmu dan terus maju ke tingkat berikutnya.
 *   🎨 **Kustomisasi Kucing & Tema:** Buka *skin* dan tema baru untuk mengubah tampilan game agar tidak membosankan!
