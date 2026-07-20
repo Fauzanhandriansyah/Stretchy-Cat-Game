@@ -6,7 +6,7 @@
 <img width="480" height="1024" alt="image" src="https://github.com/user-attachments/assets/9fd8a3af-562e-436c-8aaa-957c2bc5364e" />
 
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Android-lightgrey.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
 </div>
