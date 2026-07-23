@@ -112,7 +112,6 @@ fun CatBoard(
         }
     }
 
-    // Simple time-based wiggle animation for the tail and ears
     val pulseAnim by animateFloatAsState(
         targetValue = 1f,
         animationSpec = tween(durationMillis = 300),
@@ -137,7 +136,6 @@ fun CatBoard(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                // Ultra-responsive direct pointer touch tracking (no touch slop)
                 .pointerInput(level.cols, level.rows) {
                     awaitPointerEventScope {
                         while (true) {
@@ -154,7 +152,6 @@ fun CatBoard(
                     }
                 }
         ) {
-            // A. Draw Grid Tiles (Floor Background)
             for (r in 0 until level.rows) {
                 for (c in 0 until level.cols) {
                     val tileLeft = c * cellWidth
@@ -162,16 +159,12 @@ fun CatBoard(
                     val padding = 4f
 
                     val isObstacle = level.obstacles.containsKey(Point(r, c))
-
-                    // Draw rounded tile
                     drawRoundRect(
                         color = if (isObstacle) obstacleBgColor else tileColor,
                         topLeft = Offset(tileLeft + padding, tileTop + padding),
                         size = Size(cellWidth - padding * 2, cellHeight - padding * 2),
                         cornerRadius = CornerRadius(16f, 16f)
                     )
-
-                    // Draw inner cozy detail (small dot pattern in the center of empty tiles)
                     if (!isObstacle && Point(r, c) !in playerPath) {
                         drawCircle(
                             color = gridLineColor,
@@ -181,8 +174,6 @@ fun CatBoard(
                     }
                 }
             }
-
-            // B. Draw Obstacles / Toys
             for ((point, type) in level.obstacles) {
                 val tileLeft = point.c * cellWidth
                 val tileTop = point.r * cellHeight
@@ -192,7 +183,6 @@ fun CatBoard(
 
                 when (type) {
                     ObstacleType.YARN -> {
-                        // Soft lavender/purple ball of yarn
                         val yarnColor = Color(0xFFC39BD3)
                         val lineYarnColor = Color(0xFF884EA0)
                         drawCircle(
@@ -200,7 +190,6 @@ fun CatBoard(
                             radius = size * 0.3f,
                             center = Offset(centerX, centerY)
                         )
-                        // Swirls on the yarn ball
                         drawArc(
                             color = lineYarnColor,
                             startAngle = 0f,
@@ -219,7 +208,6 @@ fun CatBoard(
                             size = Size(size * 0.45f, size * 0.35f),
                             style = Stroke(width = 3f)
                         )
-                        // Loose thread tail
                         val threadPath = Path().apply {
                             moveTo(centerX + size * 0.2f, centerY + size * 0.2f)
                             quadraticTo(
@@ -234,16 +222,13 @@ fun CatBoard(
                         )
                     }
                     ObstacleType.MOUSE -> {
-                        // Cute pink/grey toy mouse
                         val mouseColor = Color(0xFFBDC3C7)
                         val earColor = Color(0xFFF1948A)
-                        // Body oval
                         drawOval(
                             color = mouseColor,
                             topLeft = Offset(centerX - size * 0.28f, centerY - size * 0.18f),
                             size = Size(size * 0.5f, size * 0.32f)
                         )
-                        // Ears
                         drawCircle(
                             color = earColor,
                             radius = size * 0.08f,
@@ -254,7 +239,6 @@ fun CatBoard(
                             radius = size * 0.08f,
                             center = Offset(centerX - size * 0.22f, centerY - size * 0.18f)
                         )
-                        // Tail (thin black/grey winding line)
                         val mouseTail = Path().apply {
                             moveTo(centerX + size * 0.22f, centerY)
                             quadraticTo(
@@ -267,7 +251,6 @@ fun CatBoard(
                             color = Color.DarkGray,
                             style = Stroke(width = 2f, cap = StrokeCap.Round)
                         )
-                        // Eyes
                         drawCircle(
                             color = Color.Black,
                             radius = 2.5f,
@@ -275,7 +258,6 @@ fun CatBoard(
                         )
                     }
                     ObstacleType.SCRATCH -> {
-                        // Wood scratch board
                         val woodColor = Color(0xFFD35400)
                         val innerWoodColor = Color(0xFFE67E22)
                         val scratchColor = Color(0xFF5D4037)
@@ -292,7 +274,6 @@ fun CatBoard(
                             size = Size(size * 0.56f, size * 0.4f),
                             cornerRadius = CornerRadius(6f, 6f)
                         )
-                        // Scratches (jagged dark lines)
                         drawLine(
                             color = scratchColor,
                             start = Offset(centerX - size * 0.15f, centerY - size * 0.12f),
@@ -309,7 +290,6 @@ fun CatBoard(
                         )
                     }
                     ObstacleType.PLANT -> {
-                        // Terracotta plant pot and leaves
                         val potColor = Color(0xFFE59866)
                         val leafColor = Color(0xFF52BE80)
 
